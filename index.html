@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlautAccount</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-surface: #111111;
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --accent: #ec4899;
+            --text: #ffffff;
+            --text-secondary: #a1a1aa;
+            --border: #2a2a2a;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Навигация */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 1rem 2rem;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
+        /* Страницы */
+        .page {
+            display: none;
+            min-height: 100vh;
+            padding: 100px 2rem 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: pageEnter 0.6s ease-out forwards;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes pageEnter {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Главная страница */
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Формы */
+        .form-container {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 3rem;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+        }
+
+        .email-input {
+            display: flex;
+        }
+
+        .email-input input {
+            border-radius: 8px 0 0 8px;
+            border-right: none;
+        }
+
+        .email-domain {
+            background: var(--primary-dark);
+            border: 1px solid var(--border);
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            padding: 12px 16px;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Сообщения */
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        /* Профиль */
+        .profile-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Загрузка */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Бот ссылка */
+        .bot-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .bot-link:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 1rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .form-container {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="#" class="logo" onclick="showPage('home')">FlautAccount</a>
+            <ul class="nav-links">
+                <li><a href="#" class="active" onclick="showPage('home')">Главная</a></li>
+                <li><a href="#" onclick="showPage('register')">Регистрация</a></li>
+                <li><a href="#" onclick="showPage('login')">Вход</a></li>
+                <li><a href="#" onclick="showPage('profile')">Профиль</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Главная страница -->
+    <div id="home" class="page active">
+        <div class="container">
+            <div class="hero">
+                <h1>FlautAccount</h1>
+                <p>Единая система аккаунтов для всех сервисов Flaut. Создай аккаунт один раз - используй везде!</p>
+                <a href="https://t.me/FlautBot" class="bot-link" target="_blank">
+                    <i class="fab fa-telegram"></i>
+                    Перейти в бота
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Страница регистрации -->
+    <div id="register" class="page">
+        <div class="container">
+            <div class="hero">
+                <h1>Создать аккаунт</h1>
+                <p>Заполните форму для создания вашего Flaut аккаунта</p>
+            </div>
+            <form class="form-container" id="registrationForm">
+                <div id="registerMessage"></div>
+                <div class="form-group">
+                    <label for="firstName">Имя</label>
+                    <input type="text" id="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Фамилия</label>
+                    <input type="text" id="lastName" required>
+                </div>
+                <div class="form-group">
+                    <label for="birthDate">Дата рождения</label>
+                    <input type="date" id="birthDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Электронная почта</label>
+                    <div class="email-input">
+                        <input type="text" id="email" required placeholder="username">
+                        <div class="email-domain">@flaut.ru</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" required placeholder="Придумайте надежный пароль">
+                </div>
+                <div class="form-group">
+                    <label for="tgUsername">Telegram username (опционально)</label>
+                    <input type="text" id="tgUsername" placeholder="@username">
+                </div>
+                <button type="submit" class="btn" style="width: 100%" id="registerBtn">Создать аккаунт</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Страница входа -->
+    <div id="login" class="page">
+        <div class="container">
+            <div class="hero">
+                <h1>Вход в аккаунт</h1>
+                <p>Войдите в свой Flaut аккаунт</p>
+            </div>
+            <form class="form-container" id="loginForm">
+                <div id="loginMessage"></div>
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required placeholder="username@flaut.ru">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Пароль</label>
+                    <input type="password" id="loginPassword" required placeholder="Ваш пароль">
+                </div>
+                <button type="submit" class="btn" style="width: 100%" id="loginBtn">Войти</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Страница профиля -->
+    <div id="profile" class="page">
+        <div class="container">
+            <div class="hero">
+                <h1>Профиль пользователя</h1>
+                <p>Управление вашим Flaut аккаунтом</p>
+            </div>
+            <div id="profileContent">
+                <div class="message error">Пожалуйста, войдите в систему</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class FlautAccountSystem {
+            constructor() {
+                this.accounts = this.loadAccounts();
+            }
+
+            loadAccounts() {
+                const stored = localStorage.getItem('flaut_accounts_v2');
+                if (stored) {
+                    return JSON.parse(stored);
+                }
+                
+                const oldStored = localStorage.getItem('flaut_accounts');
+                if (oldStored) {
+                    const oldAccounts = JSON.parse(oldStored);
+                    this.migrateOldAccounts(oldAccounts);
+                    return this.accounts;
+                }
+                
+                return {};
+            }
+
+            migrateOldAccounts(oldAccounts) {
+                this.accounts = {};
+                for (const [accountId, account] of Object.entries(oldAccounts)) {
+                    this.accounts[accountId] = {
+                        ...account,
+                        tg_username: account.tg_username || null,
+                        registration_date: account.registration_date || new Date().toISOString(),
+                        is_verified: true
+                    };
+                }
+                this.saveAccounts();
+                console.log('Мигрированы аккаунты из старой версии');
+            }
+
+            saveAccounts() {
+                localStorage.setItem('flaut_accounts_v2', JSON.stringify(this.accounts));
+            }
+
+            generateToken() {
+                return Math.random().toString(36).substring(2) + Date.now().toString(36);
+            }
+
+            hashPassword(password) {
+                let hash = 0;
+                for (let i = 0; i < password.length; i++) {
+                    const char = password.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString();
+            }
+
+            registerAccount(email, password, firstName, lastName, birthDate, tgUsername = null) {
+                for (const accountId in this.accounts) {
+                    if (this.accounts[accountId].email === email) {
+                        return { success: false, message: 'Аккаунт с таким email уже существует' };
+                    }
+                }
+
+                const accountId = this.generateToken();
+                
+                this.accounts[accountId] = {
+                    id: accountId,
+                    email: email,
+                    password_hash: this.hashPassword(password),
+                    first_name: firstName,
+                    last_name: lastName,
+                    birth_date: birthDate,
+                    tg_username: tgUsername,
+                    registration_date: new Date().toISOString(),
+                    auth_token: this.generateToken(),
+                    is_verified: true,
+                    created_via: 'website'
+                };
+
+                this.saveAccounts();
+                return { 
+                    success: true, 
+                    message: 'Аккаунт успешно создан!',
+                    account: this.accounts[accountId] 
+                };
+            }
+
+            login(email, password) {
+                const passwordHash = this.hashPassword(password);
+                
+                for (const accountId in this.accounts) {
+                    const account = this.accounts[accountId];
+                    if (account.email === email && account.password_hash === passwordHash) {
+                        account.auth_token = this.generateToken();
+                        this.saveAccounts();
+                        return { success: true, account: account };
+                    }
+                }
+                
+                return { success: false, message: 'Неверный email или пароль' };
+            }
+
+            getAccountByToken(token) {
+                for (const accountId in this.accounts) {
+                    if (this.accounts[accountId].auth_token === token) {
+                        return this.accounts[accountId];
+                    }
+                }
+                return null;
+            }
+            syncWithBotData(botAccounts) {
+                let synced = false;
+                for (const [accountId, botAccount] of Object.entries(botAccounts)) {
+                    if (!this.accounts[accountId]) {
+                        this.accounts[accountId] = {
+                            ...botAccount,
+                            created_via: 'bot'
+                        };
+                        synced = true;
+                    }
+                }
+                if (synced) {
+                    this.saveAccounts();
+                }
+                return synced;
+            }
+        }
+        const accountSystem = new FlautAccountSystem();
+        let currentUser = null;
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            document.getElementById(pageId).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (pageId === 'profile' && currentUser) {
+                loadProfile();
+            }
+        }
+        document.getElementById('registrationForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('registerBtn');
+            const messageDiv = document.getElementById('registerMessage');
+            
+            btn.disabled = true;
+            btn.classList.add('loading');
+            messageDiv.innerHTML = '';
+            
+            const formData = {
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                birthDate: document.getElementById('birthDate').value,
+                email: document.getElementById('email').value.trim() + '@flaut.ru',
+                password: document.getElementById('password').value,
+                tgUsername: document.getElementById('tgUsername').value.trim().replace('@', '')
+            };
+            if (!formData.firstName || !formData.lastName || !formData.birthDate || !formData.email || !formData.password) {
+                showMessage(messageDiv, 'Все поля обязательны для заполнения', 'error');
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                return;
+            }
+
+            if (formData.password.length < 6) {
+                showMessage(messageDiv, 'Пароль должен содержать минимум 6 символов', 'error');
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                return;
+            }
+            const birthDateObj = new Date(formData.birthDate);
+            const age = new Date().getFullYear() - birthDateObj.getFullYear();
+            if (age < 13) {
+                showMessage(messageDiv, 'Регистрация доступна с 13 лет', 'error');
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                return;
+            }
+            const result = accountSystem.registerAccount(
+                formData.email,
+                formData.password,
+                formData.firstName,
+                formData.lastName,
+                formData.birthDate,
+                formData.tgUsername
+            );
+            
+            if (result.success) {
+                showMessage(messageDiv, result.message, 'success');
+                document.getElementById('registrationForm').reset();
+                currentUser = result.account;
+                localStorage.setItem('current_flaut_user', JSON.stringify(currentUser));
+                setTimeout(() => showPage('profile'), 2000);
+            } else {
+                showMessage(messageDiv, result.message, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.classList.remove('loading');
+        });
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('loginBtn');
+            const messageDiv = document.getElementById('loginMessage');
+            
+            btn.disabled = true;
+            btn.classList.add('loading');
+            messageDiv.innerHTML = '';
+            
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showMessage(messageDiv, 'Заполните все поля', 'error');
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                return;
+            }
+
+            const result = accountSystem.login(email, password);
+            
+            if (result.success) {
+                showMessage(messageDiv, 'Вход выполнен успешно!', 'success');
+                currentUser = result.account;
+                localStorage.setItem('current_flaut_user', JSON.stringify(currentUser));
+                setTimeout(() => showPage('profile'), 1000);
+            } else {
+                showMessage(messageDiv, result.message, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.classList.remove('loading');
+        });
+        function loadProfile() {
+            const profileContent = document.getElementById('profileContent');
+            
+            if (currentUser) {
+                const regDate = new Date(currentUser.registration_date).toLocaleDateString('ru-RU');
+                const birthDate = new Date(currentUser.birth_date).toLocaleDateString('ru-RU');
+                
+                profileContent.innerHTML = `
+                    <div class="profile-card">
+                        <h2 style="margin-bottom: 1.5rem;">Информация об аккаунте</h2>
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <span class="info-label">Email</span>
+                                <span class="info-value">${currentUser.email}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Имя</span>
+                                <span class="info-value">${currentUser.first_name} ${currentUser.last_name}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Дата рождения</span>
+                                <span class="info-value">${birthDate}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Telegram</span>
+                                <span class="info-value">${currentUser.tg_username ? '@' + currentUser.tg_username : 'Не привязан'}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">ID аккаунта</span>
+                                <span class="info-value">${currentUser.id}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Дата регистрации</span>
+                                <span class="info-value">${regDate}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Создан через</span>
+                                <span class="info-value">${currentUser.created_via === 'bot' ? 'Telegram бота' : 'Веб-сайт'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="logout()">Выйти</button>
+                    ${currentUser.created_via === 'bot' ? `
+                        <div style="margin-top: 1rem;">
+                            <a href="https://t.me/FlautBot" class="bot-link" target="_blank">
+                                <i class="fab fa-telegram"></i>
+                                Перейти в бота
+                            </a>
+                        </div>
+                    ` : ''}
+                `;
+            } else {
+                profileContent.innerHTML = `<div class="message error">Пожалуйста, войдите в систему</div>`;
+            }
+        }
+        function showMessage(container, text, type) {
+            container.innerHTML = `<div class="message ${type}">${text}</div>`;
+        }
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('current_flaut_user');
+            document.getElementById('profileContent').innerHTML = `<div class="message error">Пожалуйста, войдите в систему</div>`;
+            showPage('home');
+        }
+        function checkAuth() {
+            const savedUser = localStorage.getItem('current_flaut_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                const currentAccount = accountSystem.getAccountByToken(currentUser.auth_token);
+                if (!currentAccount) {
+                    logout();
+                } else {
+                    currentUser = currentAccount;
+                }
+            }
+            try {
+                const botAccounts = localStorage.getItem('flaut_accounts');
+                if (botAccounts) {
+                    accountSystem.syncWithBotData(JSON.parse(botAccounts));
+                }
+            } catch (e) {
+                console.log('Не удалось синхронизировать с данными бота');
+            }
+        }
+        checkAuth();
+    </script>
+</body>
+</html>
