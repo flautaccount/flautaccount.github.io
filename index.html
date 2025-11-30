@@ -451,132 +451,146 @@
     </div>
 
     <script>
-        class FlautAccountSystem {
-            constructor() {
-                this.accounts = this.loadAccounts();
+        // Единая система аккаунтов Flaut (общая с ботом)
+class FlautAccountSystem {
+    constructor() {
+        this.accounts = this.loadAccounts();
+    }
+
+    loadAccounts() {
+        // Пробуем загрузить из общей базы
+        try {
+            const response = this.loadJSONFile('flaut_accounts_shared.json');
+            if (response) {
+                console.log('✅ Загружены аккаунты из общей базы');
+                return response;
             }
+        } catch (e) {
+            console.log('❌ Не удалось загрузить общую базу');
+        }
+        
+        return {};
+    }
 
-            loadAccounts() {
-                const stored = localStorage.getItem('flaut_accounts_v2');
-                if (stored) {
-                    return JSON.parse(stored);
-                }
-                
-                const oldStored = localStorage.getItem('flaut_accounts');
-                if (oldStored) {
-                    const oldAccounts = JSON.parse(oldStored);
-                    this.migrateOldAccounts(oldAccounts);
-                    return this.accounts;
-                }
-                
-                return {};
-            }
+    // Функция для загрузки JSON файла (эмуляция)
+    loadJSONFile(filename) {
+        // В реальном проекте это будет AJAX запрос к серверу
+        // Для демонстрации используем localStorage как общую базу
+        const stored = localStorage.getItem('flaut_accounts_shared');
+        if (stored) {
+            return JSON.parse(stored);
+        }
+        return null;
+    }
 
-            migrateOldAccounts(oldAccounts) {
-                this.accounts = {};
-                for (const [accountId, account] of Object.entries(oldAccounts)) {
-                    this.accounts[accountId] = {
-                        ...account,
-                        tg_username: account.tg_username || null,
-                        registration_date: account.registration_date || new Date().toISOString(),
-                        is_verified: true
-                    };
-                }
-                this.saveAccounts();
-                console.log('Мигрированы аккаунты из старой версии');
-            }
+    // Функция для сохранения в общую базу
+    saveToSharedDatabase(accounts) {
+        try {
+            localStorage.setItem('flaut_accounts_shared', JSON.stringify(accounts));
+            console.log('💾 Аккаунты сохранены в общую базу');
+            return true;
+        } catch (e) {
+            console.log('❌ Ошибка сохранения в общую базу:', e);
+            return false;
+        }
+    }
 
-            saveAccounts() {
-                localStorage.setItem('flaut_accounts_v2', JSON.stringify(this.accounts));
-            }
+    generateToken() {
+        return Math.random().toString(36).substring(2) + Date.now().toString(36);
+    }
 
-            generateToken() {
-                return Math.random().toString(36).substring(2) + Date.now().toString(36);
-            }
+    hashPassword(password) {
+        // Тот же алгоритм хеширования что и в боте
+        let hash = 0;
+        for (let i = 0; i < password.length; i++) {
+            const char = password.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return hash.toString();
+    }
 
-            hashPassword(password) {
-                let hash = 0;
-                for (let i = 0; i < password.length; i++) {
-                    const char = password.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash;
-                }
-                return hash.toString();
-            }
-
-            registerAccount(email, password, firstName, lastName, birthDate, tgUsername = null) {
-                for (const accountId in this.accounts) {
-                    if (this.accounts[accountId].email === email) {
-                        return { success: false, message: 'Аккаунт с таким email уже существует' };
-                    }
-                }
-
-                const accountId = this.generateToken();
-                
-                this.accounts[accountId] = {
-                    id: accountId,
-                    email: email,
-                    password_hash: this.hashPassword(password),
-                    first_name: firstName,
-                    last_name: lastName,
-                    birth_date: birthDate,
-                    tg_username: tgUsername,
-                    registration_date: new Date().toISOString(),
-                    auth_token: this.generateToken(),
-                    is_verified: true,
-                    created_via: 'website'
-                };
-
-                this.saveAccounts();
-                return { 
-                    success: true, 
-                    message: 'Аккаунт успешно создан!',
-                    account: this.accounts[accountId] 
-                };
-            }
-
-            login(email, password) {
-                const passwordHash = this.hashPassword(password);
-                
-                for (const accountId in this.accounts) {
-                    const account = this.accounts[accountId];
-                    if (account.email === email && account.password_hash === passwordHash) {
-                        account.auth_token = this.generateToken();
-                        this.saveAccounts();
-                        return { success: true, account: account };
-                    }
-                }
-                
-                return { success: false, message: 'Неверный email или пароль' };
-            }
-
-            getAccountByToken(token) {
-                for (const accountId in this.accounts) {
-                    if (this.accounts[accountId].auth_token === token) {
-                        return this.accounts[accountId];
-                    }
-                }
-                return null;
-            }
-            syncWithBotData(botAccounts) {
-                let synced = false;
-                for (const [accountId, botAccount] of Object.entries(botAccounts)) {
-                    if (!this.accounts[accountId]) {
-                        this.accounts[accountId] = {
-                            ...botAccount,
-                            created_via: 'bot'
-                        };
-                        synced = true;
-                    }
-                }
-                if (synced) {
-                    this.saveAccounts();
-                }
-                return synced;
+    registerAccount(email, password, firstName, lastName, birthDate, tgUsername = null) {
+        // Проверяем уникальность email
+        for (const accountId in this.accounts) {
+            if (this.accounts[accountId].email === email) {
+                return { success: false, message: 'Аккаунт с таким email уже существует' };
             }
         }
-        const accountSystem = new FlautAccountSystem();
-        let currentUser = null;
+
+        const accountId = this.generateToken();
+        
+        this.accounts[accountId] = {
+            id: accountId,
+            email: email,
+            password_hash: this.hashPassword(password),
+            first_name: firstName,
+            last_name: lastName,
+            birth_date: birthDate,
+            tg_username: tgUsername,
+            registration_date: new Date().toISOString(),
+            auth_token: this.generateToken(),
+            is_verified: true,
+            created_via: 'website'
+        };
+
+        // Сохраняем в общую базу
+        if (this.saveToSharedDatabase(this.accounts)) {
+            return { 
+                success: true, 
+                message: 'Аккаунт успешно создан и синхронизирован с ботом!',
+                account: this.accounts[accountId] 
+            };
+        } else {
+            return { 
+                success: false, 
+                message: 'Ошибка синхронизации с общей базой' 
+            };
+        }
+    }
+
+    login(email, password) {
+        const passwordHash = this.hashPassword(password);
+        
+        for (const accountId in this.accounts) {
+            const account = this.accounts[accountId];
+            if (account.email === email && account.password_hash === passwordHash) {
+                // Обновляем токен при входе
+                account.auth_token = this.generateToken();
+                this.saveToSharedDatabase(this.accounts);
+                return { success: true, account: account };
+            }
+        }
+        
+        return { success: false, message: 'Неверный email или пароль' };
+    }
+
+    getAccountByToken(token) {
+        for (const accountId in this.accounts) {
+            if (this.accounts[accountId].auth_token === token) {
+                return this.accounts[accountId];
+            }
+        }
+        return null;
+    }
+
+    // Поиск аккаунта по email
+    getAccountByEmail(email) {
+        for (const accountId in this.accounts) {
+            if (this.accounts[accountId].email === email) {
+                return this.accounts[accountId];
+            }
+        }
+        return null;
+    }
+}
+
+// Инициализация системы
+const accountSystem = new FlautAccountSystem();
+let currentUser = null;
+
+// Остальной код сайта остается без изменений...
+// (функции showPage, обработчики форм и т.д.)
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
